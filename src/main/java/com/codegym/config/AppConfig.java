@@ -1,13 +1,12 @@
 package com.codegym.config;
 
 
-
 import com.codegym.formatter.ProvinceFormatter;
-import com.codegym.repository.ICustomerRepository;
 import com.codegym.service.customer.CustomerService;
 import com.codegym.service.customer.ICustomerService;
 import com.codegym.service.province.IProvinceService;
 import com.codegym.service.province.ProvinceService;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -16,10 +15,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -39,8 +38,9 @@ import java.util.Properties;
 @Configuration
 @EnableWebMvc
 @EnableTransactionManagement
+@ComponentScan("com.codegym.controller")
 @EnableJpaRepositories("com.codegym.repository")
-@ComponentScan("com.codegym")
+@EnableSpringDataWebSupport
 public class AppConfig implements WebMvcConfigurer, ApplicationContextAware {
     private ApplicationContext applicationContext;
 
@@ -84,7 +84,7 @@ public class AppConfig implements WebMvcConfigurer, ApplicationContextAware {
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        dataSource.setUrl("jdbc:mysql://localhost:3306/csm-local-converter");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/customer?useUnicode=yes&characterEncoding=UTF-8");
         dataSource.setUsername("root");
         dataSource.setPassword("123456");
         return dataSource;
@@ -100,14 +100,14 @@ public class AppConfig implements WebMvcConfigurer, ApplicationContextAware {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource());
-        em.setPackagesToScan("com.codegym.model");
-        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        em.setPackagesToScan(new String[]{"com.codegym.model"});
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
-        em.setJpaProperties(additionalProperties());
+        em.setJpaProperties(properties());
         return em;
     }
 
-    public Properties additionalProperties() {
+    Properties properties() {
         Properties properties = new Properties();
         properties.setProperty("hibernate.hbm2ddl.auto", "update");
         properties.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
@@ -120,18 +120,20 @@ public class AppConfig implements WebMvcConfigurer, ApplicationContextAware {
         transactionManager.setEntityManagerFactory(emf);
         return transactionManager;
     }
+
     //    Đăng ký formatter bằng cách override phương thức addFormatter() trong lớp ApplicationConfig
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addFormatter(new ProvinceFormatter(applicationContext.getBean(ProvinceService.class)));
+
     }
     @Bean
     public ICustomerService customerService() {
         return new CustomerService();
     }
+
     @Bean
     public IProvinceService provinceService() {
         return new ProvinceService();
     }
-
 }
