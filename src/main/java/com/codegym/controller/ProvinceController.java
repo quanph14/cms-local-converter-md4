@@ -1,5 +1,6 @@
 package com.codegym.controller;
 
+import com.codegym.exception.DuplicateEmailException;
 import com.codegym.model.Customer;
 import com.codegym.model.Province;
 import com.codegym.service.customer.ICustomerService;
@@ -36,7 +37,7 @@ public class ProvinceController {
     }
 
     @PostMapping("/create-province")
-    public ModelAndView saveProvince(@ModelAttribute("province") Province province) {
+    public ModelAndView saveProvince(@ModelAttribute("province") Province province) throws DuplicateEmailException {
         provinceService.save(province);
 
         ModelAndView modelAndView = new ModelAndView("/province/create");
@@ -60,7 +61,7 @@ public class ProvinceController {
     }
 
     @PostMapping("/edit-province")
-    public ModelAndView updateProvince(@ModelAttribute("province") Province province) {
+    public ModelAndView updateProvince(@ModelAttribute("province") Province province) throws DuplicateEmailException {
         provinceService.save(province);
         ModelAndView modelAndView = new ModelAndView("/province/edit");
         modelAndView.addObject("province", province);

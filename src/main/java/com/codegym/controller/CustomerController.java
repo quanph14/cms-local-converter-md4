@@ -1,5 +1,6 @@
 package com.codegym.controller;
 
+import com.codegym.exception.DuplicateEmailException;
 import com.codegym.model.Customer;
 import com.codegym.model.Province;
 import com.codegym.service.customer.ICustomerService;
@@ -33,7 +34,7 @@ public class CustomerController {
     }
 
     @PostMapping("/create-customer")
-    public ModelAndView saveCustomer(@ModelAttribute("customer") Customer customer) {
+    public ModelAndView saveCustomer(@ModelAttribute("customer") Customer customer) throws DuplicateEmailException {
         customerService.save(customer);
         ModelAndView modelAndView = new ModelAndView("/customer/create");
         modelAndView.addObject("customer", new Customer());
@@ -67,13 +68,14 @@ public class CustomerController {
         }
     }
 
-    @PostMapping("/edit-customer")
-    public ModelAndView updateCustomer(@ModelAttribute("customer") Customer customer) {
-        customerService.save(customer);
-        ModelAndView modelAndView = new ModelAndView("/customer/edit");
-        modelAndView.addObject("customer", customer);
-        modelAndView.addObject("message", "Customer updated successfully");
-        return modelAndView;
+    @PostMapping
+    public ModelAndView updateCustomer(Customer customer){
+        try {
+            customerService.save(customer);
+            return new ModelAndView("redirect:/customers");
+        } catch (DuplicateEmailException e) {
+            return new ModelAndView("/customer/inputs-not-acceptable");
+        }
     }
 
     @GetMapping("/delete-customer/{id}")
@@ -105,5 +107,9 @@ public class CustomerController {
         } catch (Exception e) {
             return new ModelAndView("redirect:/customers");
         }
+    }
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ModelAndView showInputNotAcceptable() {
+        return new ModelAndView("/customers/inputs-not-acceptable");
     }
 }
